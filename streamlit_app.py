@@ -6,7 +6,7 @@ import requests
 # ==========================================
 # 📝 ضع روابطك الخاصة هنا لتفعيل الربط بالكامل
 # ==========================================
-SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 WEB_APP_URL = "ضع_رابط_الـ_Web_App_الذي_نسخته_من_الـ_Apps_Script_هنا"
 
 # تحويل الرابط لروابط تقرأ من الشيت مباشرة

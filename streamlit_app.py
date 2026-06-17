@@ -63,7 +63,7 @@ if choice == "⚙️ لوحة تحكم الأدمن":
     st.markdown(f"🔗 [اضغط هنا لفتح وتعديل ملف الـ Google Sheet]({SHEET_URL})")
 
 # =========================================================
-# 🖥️ واجهة الطالب
+# 🖥️ واجهة الطالب (حل مشكلة التباعد المقاسات نهائياً)
 # =========================================================
 elif choice == "🖥️ واجهة الطالب":
     st.header("🎓 بوابة الطالب التعليمية")
@@ -73,31 +73,33 @@ elif choice == "🖥️ واجهة الطالب":
         
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 🎨 الـ CSS السحري: تصفير المسافات وتكبير وعرض الأزرار بالكامل لتشبه أول تصميم تماماً بدون زوائد
+    # 🎨 الـ CSS القاتل للمسافات: بيقرب الأزرار لبعضها جداً ويخليها عريضة وطويلة بنفس الحجم بالملي
     st.markdown("""
         <style>
-        /* إجبار الأعمدة على التقارب وتقليل الفجوة بينها */
-        div[data-testid="stHorizontalBlock"] {
-            gap: 15px !important;
+        /* إلغاء الفراغات الكبيرة بين الأعمدة وجعلهم متقاربين في منتصف الشاشة */
+        [data-testid="stHorizontalBlock"] {
+            gap: 20px !important;
+            max-width: 900px !important; /* يلم المربعين لبعض في نص الشاشة تماماً */
+            margin: 0 auto !important;   /* توسيط البلوك بالكامل */
         }
         
-        /* تصميم الأزرار لتكون عريضة وطويلة ومطابقة للتصميم الأول */
+        /* إجبار الأزرار على أخذ حجم موحد وعريض وطويل */
         div.stButton > button {
             display: block !important;
             width: 100% !important;
-            min-height: 90px !important; /* طول مناسب جداً */
-            padding: 20px 40px !important; /* مساحة داخلية تجعلها عريضة */
-            font-size: 25px !important; /* تكبير الخط داخل المربع */
+            min-height: 100px !important; /* طول مثالي وموحد */
+            padding: 20px !important;
+            font-size: 26px !important;   /* تكبير الخط */
             font-weight: bold !important;
             color: white !important;
-            border-radius: 12px !important;
+            border-radius: 15px !important;
             border: none !important;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.12) !important;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.15) !important;
             transition: all 0.25s ease !important;
             cursor: pointer !important;
         }
         
-        /* المربع الأول: أزرق كحلي ملكي */
+        /* زر الشرح: أزرق كحلي */
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button {
             background-color: #1A365D !important;
         }
@@ -106,7 +108,7 @@ elif choice == "🖥️ واجهة الطالب":
             transform: translateY(-2px) !important;
         }
         
-        /* المربع الثاني: أخضر غامق محترم */
+        /* زر الامتحانات: أخضر غامق */
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button {
             background-color: #064E3B !important;
         }
@@ -117,20 +119,20 @@ elif choice == "🖥️ واجهة الطالب":
         </style>
     """, unsafe_allow_html=True)
     
-    # 🧱 بناء المربعين المتقاربين والعراض جنب بعض
+    # 🧱 بناء المربعين جنب بعض (ملمومين في نص الشاشة وبعاد عن الأطراف)
     box_sharh, box_quiz = st.columns(2)
     
     with box_sharh:
-        if st.button("📺 الشرح والدروس", key="btn_sharh_final"):
+        if st.button("📺 الشرح والدروس", key="btn_sharh_v4"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
-        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_final"):
+        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_v4"):
             st.session_state.current_view = "quiz"
             
     st.markdown("---")
 
-    # 🟢 عرض محتوى "خانة الشرح"
+    # 🟢 قسم الشرح
     if st.session_state.current_view == "sharh":
         st.subheader("📺 قسم المحاضرات وفيديوهات الشرح")
         if not courses_db:
@@ -151,7 +153,7 @@ elif choice == "🖥️ واجهة الطالب":
             if pd.notna(current_lesson['pdf']) and current_lesson['pdf']:
                 st.markdown(f"[📥 تحميل ملف الـ PDF المرفق للدرس]({current_lesson['pdf']})")
 
-    # 🔴 عرض محتوى "خانة الامتحانات" 
+    # 🔴 قسم الامتحانات
     elif st.session_state.current_view == "quiz":
         st.subheader("📝 قسم الامتحانات والتقييمات المستقلة")
         if not quizzes_db:

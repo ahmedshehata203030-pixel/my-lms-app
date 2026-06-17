@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
-import uuid
 
-# 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا (تأكد من جعله Anyone with link can edit)
-SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
+# 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا 
+SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
 
-# تحويل الرابط العادي لروابط تقرأ وتكتب CSV مباشرة
+# 🔑 الباسورد الخاص بك كأدمن (تقدر تغيره لأي كلمة تحبها)
+ADMIN_PASSWORD = "admin123"
+
+# تحويل الرابط العادي لروابط تقرأ CSV مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=quizzes")
 
@@ -45,37 +47,47 @@ def load_data():
 
     return courses, quizzes
 
-# دالة لحفظ درس جديد في جوجل شيت عبر الاستجابة لـ Forms السحابية أو كود مدمج بسيط
-# لمستويات متقدمة نستخدم التحديث المباشر، ولكن للتسهيل بدون مفاتيح معقدة سنعرض المحتوى المخزن
-# وإذا أحببت ربط احترافي بالـ API لجوجل شيتس سنحتاج مكتبة gspread ومفتاح JSON من Google Cloud.
-
-# شاشة الـ Streamlit الأساسية
-st.set_page_config(page_title="منصتي التعليمية المحفوظة", layout="wide")
-
-# جلب البيانات الحية من جوجل شيت فور تحميل الصفحة
+# تهيئة الصفحة
+st.set_page_config(page_title="منصتي التعليمية", layout="wide")
 courses_db, quizzes_db = load_data()
 
-st.title("🎓 منصة الشرح والامتحانات (قاعدة بيانات حية)")
-st.markdown("---")
+# --- القائمة الجانبية (Sidebar) ---
+st.sidebar.title("🎮 التحكم بالمنصة")
 
-choice = st.sidebar.radio("اختر الواجهة:", ["🖥️ واجهة الطالب (مشاهدة وامتحانات)", "⚙️ لوحة تحكم الأدمن (رفع المحتوى)"])
+# خانة الباسورد المخفية أسفل القائمة
+st.sidebar.markdown("---")
+admin_key = st.sidebar.text_input("🔑 خاص بالأدمن فقط (ادخل الباسورد):", type="password")
 
+# تحديد الواجهات المتاحة بناءً على الباسورد
+if admin_key == ADMIN_PASSWORD:
+    st.sidebar.success("🔓 تم تفعيل صلاحيات الأدمن")
+    choice = st.sidebar.radio("اختر الواجهة الحالية:", ["🖥️ واجهة الطالب (مشاهدة وامتحانات)", "⚙️ لوحة تحكم الأدمن (رفع المحتوى)"])
+else:
+    # لو الباسورد غلط أو فاضي، المنصة هتدخله طالب إجبارياً وبدون خيارات ثانية
+    choice = "🖥️ واجهة الطالب (مشاهدة وامتحانات)"
+
+# =========================================================
+# ⚙️ واجهة الأدمن (تظهر لك أنت فقط عند كتابة الباسورد الصحيح)
+# =========================================================
 if choice == "⚙️ لوحة تحكم الأدمن (رفع المحتوى)":
     st.header("🛠️ إدارة الكورسات والامتحانات")
-    st.info("💡 لحفظ البيانات بشكل دائم ومباشر بدون تعقيد برمجيات الحماية، يمكنك كتابة الدروس والأسئلة مباشرة داخل ملف الـ Google Sheet في الحساب الخاص بك، وستظهر هنا فوراً للطلاب عند عمل تحديث للصفحة!")
+    st.info("💡 لتعديل المحتوى، يمكنك إضافة البيانات مباشرة داخل ملف الـ Google Sheet وسيتم تحديث المنصة تلقائياً!")
     st.markdown(f"🔗 [اضغط هنا لفتح ملف قاعدة البيانات وتعديله]({SHEET_URL})")
     
     st.markdown("""
-    **طريقة الكتابة في الشيت لتظهر هنا:**
-    * **في ورقة lessons اكتب الأعمدة التالية:** `course_title`, `lesson_id`, `lesson_title`, `video_url`, `pdf_url`
-    * **في ورقة quizzes اكتب الأعمدة التالية:** `lesson_id`, `q_id`, `question_text`, `optA`, `optB`, `optC`, `optD`, `correct_opt`
+    **هيكل العناوين المطلوبة في الشيت:**
+    * **في ورقة lessons:** `course_title`, `lesson_id`, `lesson_title`, `video_url`, `pdf_url`
+    * **في ورقة quizzes:** `lesson_id`, `q_id`, `question_text`, `optA`, `optB`, `optC`, `optD`, `correct_opt`
     """)
 
+# =========================================================
+# 🖥️ واجهة الطالب (الواجهة الافتراضية لأي حد يفتح اللينك)
+# =========================================================
 elif choice == "🖥️ واجهة الطالب (مشاهدة وامتحانات)":
     st.header("📚 بوابة الطالب التعليمية")
     
     if not courses_db:
-        st.info("👋 المنصة بانتظار إضافة محتوى في ملف الـ Google Sheets لتظهر هنا تلقائياً.")
+        st.info("👋 مرحباً بك! المنصة قيد التجهيز حالياً وسيتم رفع المحتوى قريباً جداً.")
     else:
         chosen_course = st.selectbox("اختر الكورس المتاح لك:", list(courses_db.keys()))
         lessons_available = courses_db[chosen_course]

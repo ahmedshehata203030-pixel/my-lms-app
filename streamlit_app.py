@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا 
-SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 # تحويل الرابط لروابط تقرأ من الشيت مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
@@ -94,7 +94,7 @@ elif choice == "🖥️ واجهة الطالب":
     with box_sharh:
         st.markdown("""
             <div style="background-color:#1E3A8A; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="color:white; margin:0;">📺 خانة الشرح والدروس</h3>
+                <h3 style="color:white; margin:0;">📺 الشرح والدروس</h3>
             </div>
         """, unsafe_allow_html=True)
         if st.button("👇 دخول قسم الشرح والفيديوهات", use_container_width=True, type="primary"):
@@ -103,7 +103,7 @@ elif choice == "🖥️ واجهة الطالب":
     with box_quiz:
         st.markdown("""
             <div style="background-color:#065F46; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="color:white; margin:0;">📝 خانة الامتحانات والاختبارات</h3>
+                <h3 style="color:white; margin:0;">📝 الامتحانات والاختبارات</h3>
             </div>
         """, unsafe_allow_html=True)
         if st.button("👇 دخول قسم الامتحانات الحرة", use_container_width=True, type="primary"):

@@ -120,7 +120,7 @@ elif st.session_state.current_view == "quiz":
                     score = int((correct / len(questions)) * 100)
                     
                     # 🚀 كود إرسال النتيجة للـ Web App (تأكد من وضع الرابط في السطر الأسفل)
-                    WEB_APP_URL = "حط_هنا_رابط_تطبيق_الويب_اللي_آخره_exec"
+                    WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                     
                     payload = {
                         "student_name": student_name,

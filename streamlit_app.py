@@ -54,15 +54,14 @@ query_params = st.query_params
 # التحقق هل الرابط يحتوي على ?role=admin
 if query_params.get("role") == "admin":
     st.sidebar.title("🎛️ لوحة الإدارة مفعّلة")
-    choice = st.sidebar.radio("اختر الواجهة الحالية:", ["🖥️ واجهة الطالب (مشاهدة وامتحانات)", "⚙️ لوحة تحكم الأدمن (رفع المحتوى)"])
+    choice = st.sidebar.radio("اختر الواجهة الحالية:", ["🖥️ واجهة الطالب", "⚙️ لوحة تحكم الأدمن"])
 else:
-    # الطالب لا يرى أي خيارات أو لوحات تحكم في السايدبار
-    choice = "🖥️ واجهة الطالب (مشاهدة وامتحانات)"
+    choice = "🖥️ واجهة الطالب"
 
 # =========================================================
-# ⚙️ واجهة الأدمن (المخفية بالكامل ولا تفتح إلا بالرابط السري)
+# ⚙️ واجهة الأدمن (المخفية بالكامل)
 # =========================================================
-if choice == "⚙️ لوحة تحكم الأدمن (رفع المحتوى)":
+if choice == "⚙️ لوحة تحكم الأدمن":
     st.header("🛠️ إدارة الكورسات والامتحانات")
     st.success("🔓 مرحباً بك يا هندسة، تم الدخول عبر الرابط السري بنجاح.")
     st.markdown(f"🔗 [اضغط هنا لفتح ملف قاعدة البيانات وتعديله]({SHEET_URL})")
@@ -74,63 +73,78 @@ if choice == "⚙️ لوحة تحكم الأدمن (رفع المحتوى)":
     """)
 
 # =========================================================
-# 🖥️ واجهة الطالب (الواجهة الافتراضية والوحيدة)
+# 🖥️ واجهة الطالب (مقسمة لخانة شرح وخانة امتحانات)
 # =========================================================
-elif choice == "🖥️ واجهة الطالب (مشاهدة وامتحانات)":
+elif choice == "🖥️ واجهة الطالب":
     st.header("📚 بوابة الطالب التعليمية")
     
     if not courses_db:
         st.info("👋 مرحباً بك! المنصة قيد التجهيز حالياً وسيتم رفع المحتوى قريباً جداً.")
     else:
-        chosen_course = st.selectbox("اختر الكورس المتاح لك:", list(courses_db.keys()))
-        lessons_available = courses_db[chosen_course]
-        
-        lesson_names = [l['title'] for l in lessons_available]
-        chosen_lesson_title = st.selectbox("اختر الدرس المراد شرحه:", lesson_names)
+        # 1. اختيار الكورس والدرس من القوائم
+        col1, col2 = st.columns(2)
+        with col1:
+            chosen_course = st.selectbox("اختر الكورس / الدبلومة:", list(courses_db.keys()))
+        with col2:
+            lessons_available = courses_db[chosen_course]
+            lesson_names = [l['title'] for l in lessons_available]
+            chosen_lesson_title = st.selectbox("اختر الدرس المطلوب:", lesson_names)
         
         current_lesson = next(l for l in lessons_available if l['title'] == chosen_lesson_title)
-        
-        st.markdown(f"### 📺 فيديو الشرح: {current_lesson['title']}")
-        
-        if "iframe" in str(current_lesson['video']):
-            st.components.v1.html(current_lesson['video'], height=450)
-        else:
-            st.video(current_lesson['video'])
-            
-        if pd.notna(current_lesson['pdf']) and current_lesson['pdf']:
-            st.markdown(f"[📥 اضغط هنا لتحميل ملف الـ PDF الخاص بالدرس]({current_lesson['pdf']})")
-            
-        st.markdown("---")
-        st.markdown("### 📝 الامتحان التقييمي للدرس")
         les_id = current_lesson['id']
         
-        if les_id not in quizzes_db:
-            st.info("📩 لا يوجد امتحان متاح لهذا الدرس حالياً.")
-        else:
-            questions = quizzes_db[les_id]
-            student_answers = {}
+        st.markdown("---")
+        
+        # 2. 🎉 إنشاء الخانتين (Tabs) الرئيسية في الشاشة 🎉
+        tab_sharh, tab_imtehan = st.tabs(["📺 خانة الشرح والملفات", "📝 خانة الامتحانات والتقييم"])
+        
+        # --- [ الخانة الأولى: الشرح والملفات ] ---
+        with tab_sharh:
+            st.markdown(f"### 📺 فيديو الشرح: {current_lesson['title']}")
             
-            with st.form(key=f"quiz_form_{les_id}"):
-                for i, q in enumerate(questions):
-                    st.write(f"**سؤال {i+1}: {q['question']}**")
-                    student_answers[q['id']] = st.radio(
-                        "اختر الإجابة الصحيحة:", 
-                        ["A", "B", "C", "D"], 
-                        format_func=lambda x: f"{x} - {q['options'][['A','B','C','D'].index(x)]}" if pd.notna(q['options'][['A','B','C','D'].index(x)]) else x,
-                        key=f"q_{q['id']}"
-                    )
+            # تشغيل الفيديو
+            if "iframe" in str(current_lesson['video']):
+                st.components.v1.html(current_lesson['video'], height=450)
+            else:
+                st.video(current_lesson['video'])
                 
-                submit_button = st.form_submit_with_value("إرسال الإجابات وإنهاء الامتحان")
+            # تحميل الـ PDF
+            if pd.notna(current_lesson['pdf']) and current_lesson['pdf']:
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.markdown(f"[📥 اضغط هنا لتحميل ملف الـ PDF المرفق مع هذا الدرس]({current_lesson['pdf']})")
+        
+        # --- [ الخانة الثانية: الامتحانات ] ---
+        with tab_imtehan:
+            st.markdown(f"### 📝 الامتحان التقييمي لدرس: {current_lesson['title']}")
+            
+            if les_id not in quizzes_db:
+                st.info("📩 لا يوجد امتحان متاح لهذا الدرس حالياً.")
+            else:
+                questions = quizzes_db[les_id]
+                student_answers = {}
                 
-                if submit_button:
-                    correct_count = 0
-                    for q in questions:
-                        if student_answers[q['id']] == q['correct']:
-                            correct_count += 1
+                with st.form(key=f"quiz_form_{les_id}"):
+                    for i, q in enumerate(questions):
+                        st.write(f"**سؤال {i+1}: {q['question']}**")
+                        student_answers[q['id']] = st.radio(
+                            "اختر الإجابة الصحيحة:", 
+                            ["A", "B", "C", "D"], 
+                            format_func=lambda x: f"{x} - {q['options'][['A','B','C','D'].index(x)]}" if pd.notna(q['options'][['A','B','C','D'].index(x)]) else x,
+                            key=f"q_{q['id']}"
+                        )
+                        st.markdown(" ")
                     
-                    score = int((correct_count / len(questions)) * 100)
-                    st.markdown("### 📊 نتيجتك الفورية:")
-                    if score >= 50:
-                        st.success(f"🎉 مبروك! لقد نجحت. درجتك هي: {score}%")
-                    else:
-                        st.error(f"😞 حظ أوفر المرة القادمة. درجتك هي: {score}%. درجة النجاح من 50%")
+                    submit_button = st.form_submit_with_value("إرسال الإجابات وإنهاء الامتحان")
+                    
+                    if submit_button:
+                        correct_count = 0
+                        for q in questions:
+                            if student_answers[q['id']] == q['correct']:
+                                correct_count += 1
+                        
+                        score = int((correct_count / len(questions)) * 100)
+                        st.markdown("### 📊 نتيجتك الفورية:")
+                        if score >= 50:
+                            st.success(f"🎉 مبروك! لقد نجحت. درجتك هي: {score}%")
+                        else:
+                            st.error(f"😞 حظ أوفر المرة القادمة. درجتك هي: {score}%. درجة النجاح من 50%")

@@ -63,7 +63,7 @@ if choice == "⚙️ لوحة تحكم الأدمن":
     st.markdown(f"🔗 [اضغط هنا لفتح وتعديل ملف الـ Google Sheet]({SHEET_URL})")
 
 # =========================================================
-# 🖥️ واجهة الطالب (حل مشكلة التباعد المقاسات نهائياً)
+# 🖥️ واجهة الطالب (الضبط الرياضي للمربعات)
 # =========================================================
 elif choice == "🖥️ واجهة الطالب":
     st.header("🎓 بوابة الطالب التعليمية")
@@ -73,61 +73,71 @@ elif choice == "🖥️ واجهة الطالب":
         
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 🎨 الـ CSS القاتل للمسافات: بيقرب الأزرار لبعضها جداً ويخليها عريضة وطويلة بنفس الحجم بالملي
+    # 🎨 الـ CSS الهندسي: تصفير وتوحيد المقاسات بالبكسل علشان تضمن إنهم قد بعض 100%
     st.markdown("""
         <style>
-        /* إلغاء الفراغات الكبيرة بين الأعمدة وجعلهم متقاربين في منتصف الشاشة */
-        [data-testid="stHorizontalBlock"] {
-            gap: 20px !important;
-            max-width: 900px !important; /* يلم المربعين لبعض في نص الشاشة تماماً */
-            margin: 0 auto !important;   /* توسيط البلوك بالكامل */
+        /* توسيط وتجميع الأزرار في منتصف الصفحة وبمسافة قريبة جداً */
+        div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 25px !important; /* مسافة التقارب المثالية */
+            max-width: 1000px !important;
+            margin: 0 auto !important;
         }
         
-        /* إجبار الأزرار على أخذ حجم موحد وعريض وطويل */
-        div.stButton > button {
-            display: block !important;
+        /* ضبط حجم كتل الأعمدة ليكون متساوي */
+        div[data-testid="stColumn"] {
+            flex: 1 !important;
             width: 100% !important;
-            min-height: 100px !important; /* طول مثالي وموحد */
-            padding: 20px !important;
-            font-size: 26px !important;   /* تكبير الخط */
+            max-width: 450px !important; /* سقف العرض للمربع */
+        }
+        
+        /* إجبار الأزرار على التساوي المطلق في الطول والعرض */
+        div.stButton > button {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 110px !important; /* طول موحد بالملي للمربعين */
+            font-size: 26px !important; /* حجم خط موحد وكبير */
             font-weight: bold !important;
             color: white !important;
             border-radius: 15px !important;
             border: none !important;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.15) !important;
+            box-shadow: 0px 6px 16px rgba(0,0,0,0.15) !important;
             transition: all 0.25s ease !important;
-            cursor: pointer !important;
+            white-space: nowrap !important; /* منع النص من النزول لسطر جديد */
         }
         
-        /* زر الشرح: أزرق كحلي */
+        /* تخصيص المربع الأول (الشرح) باللون الأزرق الكحلي */
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button {
             background-color: #1A365D !important;
         }
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button:hover {
             background-color: #0F172A !important;
-            transform: translateY(-2px) !important;
+            transform: translateY(-3px) !important;
         }
         
-        /* زر الامتحانات: أخضر غامق */
+        /* تخصيص المربع الثاني (الامتحانات) باللون الأخضر الداكن وبنفس المقاسات تماماً */
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button {
             background-color: #064E3B !important;
         }
         div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button:hover {
             background-color: #022C22 !important;
-            transform: translateY(-2px) !important;
+            transform: translateY(-3px) !important;
         }
         </style>
     """, unsafe_allow_html=True)
     
-    # 🧱 بناء المربعين جنب بعض (ملمومين في نص الشاشة وبعاد عن الأطراف)
+    # 🧱 إنشاء الأعمدة المستقرة والمتقاربة
     box_sharh, box_quiz = st.columns(2)
     
     with box_sharh:
-        if st.button("📺 الشرح والدروس", key="btn_sharh_v4"):
+        if st.button("📺 الشرح والدروس", key="btn_sharh_fixed"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
-        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_v4"):
+        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_fixed"):
             st.session_state.current_view = "quiz"
             
     st.markdown("---")

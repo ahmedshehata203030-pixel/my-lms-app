@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 
 # 🔗 ضع رابط الجوجل شيت الخاص بك هنا (تأكد أن المشاركة مضبوطة على: أي شخص لديه الرابط يمكنه العرض)
-SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17al1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 # تحويل تلقائي للروابط لقراءة الصفحات مباشرة كـ CSV
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")

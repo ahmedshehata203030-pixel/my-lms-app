@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
+import requests
 from datetime import datetime
 
-# 🔗 حط رابط الشيت بتاعك هنا
-SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
+# 🔗 1️⃣ حط رابط الشيت العادي بتاعك هنا
+SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
 
-# تحويل الرابط السحري لقراءة الصفحات مباشرة كـ CSV
+# تحويل تلقائي للرابط عشان يقرا الأسئلة والدروس في ثانية ومن غير سيرفرات
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=quizzes")
 
@@ -35,7 +36,7 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# أزرار التصميم المربع النظيف
+# تصميم الأزرار المربع النظيف
 st.markdown("""
     <style>
     div[data-testid="stHorizontalBlock"] { display: flex !important; justify-content: center !important; gap: 25px !important; }
@@ -57,8 +58,7 @@ if st.session_state.current_view == "sharh":
     if courses_db:
         chosen_course = st.selectbox("اختر الكورس / الدبلومة:", list(courses_db.keys()))
         lessons_available = courses_db[chosen_course]
-        lesson_names = [l['title'] for l in lessons_available]
-        chosen_lesson = st.selectbox("اختر الدرس المراد مشاهدته:", lesson_names)
+        chosen_lesson = st.selectbox("اختر الدرس المراد مشاهدته:", [l['title'] for l in lessons_available])
         current_lesson = next(l for l in lessons_available if l['title'] == chosen_lesson)
         st.video(current_lesson['video'])
         if pd.notna(current_lesson['pdf']) and current_lesson['pdf']:
@@ -72,6 +72,9 @@ elif st.session_state.current_view == "quiz":
             chosen_quiz = st.selectbox("اختر الامتحان المطلوب للدخول:", list(quizzes_db.keys()))
             questions = quizzes_db[chosen_quiz]
             
+            if f"start_{chosen_quiz}" not in st.session_state:
+                st.session_state[f"start_{chosen_quiz}"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
             with st.form(key="simple_quiz_form"):
                 student_answers = {}
                 for i, q in enumerate(questions):
@@ -79,12 +82,29 @@ elif st.session_state.current_view == "quiz":
                     student_answers[i] = st.radio("اختر الإجابة:", ["A", "B", "C", "D"], key=f"q_{i}")
                 
                 if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):
+                    submit_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     correct = sum(1 for i, q in enumerate(questions) if student_answers[i] == q['correct'])
                     score = int((correct / len(questions)) * 100)
                     
+                    # 🔗 2️⃣ الربط العادي للكتابة: بيبعت النتيجة كـ Form عادي للشيت
+                    # عشان يشتغل، تأكد إنك عامل الشيت "Anyone with the link is Editor"
+                    try:
+                        form_url = SHEET_URL.replace("/edit?usp=sharing", "/formResponse")
+                        # إرسال البيانات بشكل مخفي وسريع للشيت
+                        requests.post(form_url, data={
+                            "submit": "Submit",
+                            "student_name": student_name,
+                            "quiz_title": chosen_quiz,
+                            "score": f"{score}%",
+                            "start_time": st.session_state[f"start_{chosen_quiz}"],
+                            "submit_time": submit_time
+                        })
+                    except:
+                        pass
+                    
                     st.markdown("---")
                     if score >= 50:
-                        st.success(f"🎉 ممتاز يا {student_name}! لقد اجتزت الامتحان بنجاح. درجتك الفورية هي: {score}%")
+                        st.success(f"🎉 ممتاز يا {student_name}! درجتك الفورية هي: {score}%")
                     else:
                         st.error(f"😞 للأسف يا {student_name} درجتك: {score}%. درجة النجاح من 50%.")
                     st.balloons()

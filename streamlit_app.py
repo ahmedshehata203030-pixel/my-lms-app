@@ -4,7 +4,7 @@ import requests
 from datetime import datetime
 
 # 🔗 1️⃣ حط رابط الشيت العادي بتاعك هنا
-SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 # تحويل تلقائي للرابط عشان يقرا الأسئلة والدروس في ثانية ومن غير سيرفرات
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")

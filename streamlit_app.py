@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
+SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
 
 # تحويل الرابط لروابط تقرأ من الشيت مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
@@ -10,7 +10,6 @@ QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet
 
 # دالة جلب البيانات
 def load_data():
-    # جلب الدروس
     try:
         lessons_df = pd.read_csv(LESSONS_CSV)
         courses = {}
@@ -26,7 +25,6 @@ def load_data():
     except:
         courses = {}
 
-    # جلب الامتحانات المستقلة
     try:
         quizzes_df = pd.read_csv(QUIZZES_CSV)
         quizzes = {}
@@ -57,57 +55,70 @@ else:
     choice = "🖥️ واجهة الطالب"
 
 # =========================================================
-# ⚙️ لوحة الأدمن (تظهر لك عند الدخول بالرابط السري)
+# ⚙️ لوحة الأدمن (المخفية)
 # =========================================================
 if choice == "⚙️ لوحة تحكم الأدمن":
     st.header("🛠️ لوحة تحكم الإدارة والتعديل")
     st.success("🔓 مرحباً بك يا هندسة. يمكنك التعديل والرفع الآن من الشيت.")
     st.markdown(f"🔗 [اضغط هنا لفتح وتعديل ملف الـ Google Sheet]({SHEET_URL})")
-    
-    st.markdown("""
-    ### 📂 طريقة تنظيم البيانات في الشيت الجديد:
-    
-    **1. في ورقة `lessons` (خاص بالشرح):**
-    اكتب العناوين التالية في الصف الأول:
-    `course_title` | `lesson_title` | `video_url` | `pdf_url`
-    *(مثال: اكتب اسم الكورس، اسم الدرس، ورابط الفيديو، وسيظهر في خانة الشرح).*
-    
-    **2. في ورقة `quizzes` (خاص بالامتحانات المستقلة):**
-    اكتب العناوين التالية في الصف الأول:
-    `quiz_title` | `question_text` | `optA` | `optB` | `optC` | `optD` | `correct_opt`
-    *(مثال: اكتب في خانة quiz_title اسم الامتحان مثل "امتحان الشهر الأول" أو "مراجعة شاملة"، وحط أسئلتك براحتك).*
-    """)
 
 # =========================================================
-# 🖥️ واجهة الطالب (مربعين كبار: خانة للشرح وخانة للامتحانات)
+# 🖥️ واجهة الطالب (تصميم الصناديق التفاعلية كأزرار مباشرة)
 # =========================================================
 elif choice == "🖥️ واجهة الطالب":
     st.header("🎓 بوابة الطالب التعليمية")
     
-    # تهيئة الحالة الافتراضية للزرار
+    # تهيئة الحالة الافتراضية
     if "current_view" not in st.session_state:
         st.session_state.current_view = "sharh"
         
-    # 🧱 تصميم المربعين الكبار في رأس الصفحة 🧱
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # 🧱 إنشاء المربعات الكبيرة كأزرار مباشرة بدون إضافات حمراء 🧱
     box_sharh, box_quiz = st.columns(2)
     
     with box_sharh:
+        # زر مخصص يأخذ شكل وتصميم الصندوق بالكامل
         st.markdown("""
-            <div style="background-color:#1E3A8A; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="color:white; margin:0;">📺 الشرح والدروس</h3>
-            </div>
+            <style>
+            div.stButton > button:first-child {
+                background-color: #1E3A8A !important;
+                color: white !important;
+                font-size: 24px !important;
+                font-weight: bold !important;
+                padding: 30px !important;
+                border-radius: 12px !important;
+                border: none !important;
+                width: 100% !important;
+                box-shadow: 0px 4px 10px rgba(0,0,0,0.1) !important;
+                transition: 0.3s !important;
+            }
+            div.stButton > button:first-child:hover {
+                background-color: #172554 !important;
+                transform: scale(1.02) !important;
+            }
+            </style>
         """, unsafe_allow_html=True)
-        if st.button("👇 دخول قسم الشرح والفيديوهات", use_container_width=True, type="primary"):
+        if st.button("📺 الشرح والدروس", key="btn_sharh_main"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
-        st.markdown("""
-            <div style="background-color:#065F46; padding:15px; border-radius:10px; text-align:center; color:white;">
-                <h3 style="color:white; margin:0;">📝 الامتحانات والاختبارات</h3>
-            </div>
-        """, unsafe_allow_html=True)
-        if st.button("👇 دخول قسم الامتحانات الحرة", use_container_width=True, type="primary"):
+        # زر مخصص للقسم الثاني بنفس الطريقة والألوان الخاصة به
+        # نستخدم كمبرمجين معرفة فريدة عبر المكونات لتخصيص كل زر بشكل مستقل
+        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_main"):
             st.session_state.current_view = "quiz"
+            
+        # كود CSS لتلوين الزر الثاني بالأخضر بشكل منفصل
+        st.markdown("""
+            <style>
+            div:nth-child(2) > div.stButton > button:first-child {
+                background-color: #065F46 !important;
+            }
+            div:nth-child(2) > div.stButton > button:first-child:hover {
+                background-color: #022C22 !important;
+            }
+            </style>
+        """, unsafe_allow_html=True)
             
     st.markdown("---")
 
@@ -117,14 +128,13 @@ elif choice == "🖥️ واجهة الطالب":
         if not courses_db:
             st.info("👋 جاري رفع الفيديوهات والدروس حالياً...")
         else:
-            chosen_course = st.selectbox("اختر الوحدة:", list(courses_db.keys()))
+            chosen_course = st.selectbox("اختر الكورس / الدبلومة:", list(courses_db.keys()))
             lessons_available = courses_db[chosen_course]
             lesson_names = [l['title'] for l in lessons_available]
             chosen_lesson = st.selectbox("اختر الدرس المراد مشاهدته:", lesson_names)
             
             current_lesson = next(l for l in lessons_available if l['title'] == chosen_lesson)
             
-            # عرض الفيديو والـ PDF
             if "iframe" in str(current_lesson['video']):
                 st.components.v1.html(current_lesson['video'], height=450)
             else:
@@ -137,9 +147,8 @@ elif choice == "🖥️ واجهة الطالب":
     elif st.session_state.current_view == "quiz":
         st.subheader("📝 قسم الامتحانات والتقييمات المستقلة")
         if not quizzes_db:
-            st.info("👋 لا توجد امتحانات مرفوعة حالياً في هذا القسم...")
+            st.info("👋 لا توجد امتحانات مرفوعة حالياً في هذا قسم...")
         else:
-            # الطالب يختار اسم الامتحان مباشرة (اللي أنت بتكتبه في عمود quiz_title)
             chosen_quiz = st.selectbox("اختر الامتحان المتاح للدخول:", list(quizzes_db.keys()))
             questions = quizzes_db[chosen_quiz]
             student_answers = {}
@@ -168,4 +177,4 @@ elif choice == "🖥️ واجهة الطالب":
                     if score >= 50:
                         st.success(f"🎉 ممتاز! لقد اجتزت الامتحان بنجاح. درجتك: {score}%")
                     else:
-                        st.error(f"😞 درجتك: {score}%. درجة النجاح من 50%، يمكنك المحاولة مجدداً بعد المذاكرة.")
+                        st.error(f"😞 درجتك: {score}%. درجة النجاح من 50%")

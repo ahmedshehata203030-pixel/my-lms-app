@@ -3,7 +3,7 @@ import pandas as pd
 import uuid
 
 # 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا (تأكد من جعله Anyone with link can edit)
-SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?gid=0#gid=0"
 
 # تحويل الرابط العادي لروابط تقرأ وتكتب CSV مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")

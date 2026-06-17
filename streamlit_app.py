@@ -7,7 +7,7 @@ import requests
 # 📝 ضع روابطك الخاصة هنا لتفعيل الربط بالكامل
 # ==========================================
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
-WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwdpQOjHiIV4g7rBPA5JueYj0QQnCR6vgQffZGNsytjE7gCmBgsZFnZEGBL92roTieR/exec"
+WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwr44RWaF4i_a4Sd55oNX_Dko802t2hq3TnllWPMSX8RLgGiA-OqYYkxKcf0-ljd0kcHg/exec"
 
 # تحويل الرابط لروابط تقرأ من الشيت مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")

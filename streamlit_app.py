@@ -63,62 +63,65 @@ if choice == "⚙️ لوحة تحكم الأدمن":
     st.markdown(f"🔗 [اضغط هنا لفتح وتعديل ملف الـ Google Sheet]({SHEET_URL})")
 
 # =========================================================
-# 🖥️ واجهة الطالب (تصميم الصناديق التفاعلية كأزرار مباشرة)
+# 🖥️ واجهة الطالب (تصميم المربعات الكبيرة المتساوية تماماً)
 # =========================================================
 elif choice == "🖥️ واجهة الطالب":
     st.header("🎓 بوابة الطالب التعليمية")
     
-    # تهيئة الحالة الافتراضية
+    # تهيئة الحالة الافتراضية للقسم المختار
     if "current_view" not in st.session_state:
         st.session_state.current_view = "sharh"
         
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # 🧱 إنشاء المربعات الكبيرة كأزرار مباشرة بدون إضافات حمراء 🧱
+    # حقل الـ CSS لتوحيد وتكبير أزرار الأقسام بالكامل وجعلها على مستوى واحد
+    st.markdown("""
+        <style>
+        /* استهداف أزرار الأقسام الرئيسية لتكبيرها وتطويلها */
+        div.stButton > button {
+            display: block !important;
+            width: 100% !important;
+            min-height: 120px !important; /* زيادة الطول والارتفاع */
+            font-size: 26px !important; /* تكبير حجم الخط */
+            font-weight: bold !important;
+            color: white !important;
+            border-radius: 15px !important;
+            border: none !important;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.15) !important;
+            transition: all 0.3s ease !important;
+            cursor: pointer !important;
+        }
+        
+        /* تلوين زر الشرح بالأزرق الملكي */
+        div[data-testid="stColumn"]:nth-of-type(1) div.stButton > button {
+            background-color: #1E3A8A !important;
+        }
+        div[data-testid="stColumn"]:nth-of-type(1) div.stButton > button:hover {
+            background-color: #172554 !important;
+            transform: translateY(-3px) !important;
+        }
+        
+        /* تلوين زر الامتحانات بالأخضر الداكن */
+        div[data-testid="stColumn"]:nth-of-type(2) div.stButton > button {
+            background-color: #065F46 !important;
+        }
+        div[data-testid="stColumn"]:nth-of-type(2) div.stButton > button:hover {
+            background-color: #022C22 !important;
+            transform: translateY(-3px) !important;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    # 🧱 بناء المربعين الكبار على نفس الصف (Row) وبأحجام متطابقة 🧱
     box_sharh, box_quiz = st.columns(2)
     
     with box_sharh:
-        # زر مخصص يأخذ شكل وتصميم الصندوق بالكامل
-        st.markdown("""
-            <style>
-            div.stButton > button:first-child {
-                background-color: #1E3A8A !important;
-                color: white !important;
-                font-size: 24px !important;
-                font-weight: bold !important;
-                padding: 30px !important;
-                border-radius: 12px !important;
-                border: none !important;
-                width: 100% !important;
-                box-shadow: 0px 4px 10px rgba(0,0,0,0.1) !important;
-                transition: 0.3s !important;
-            }
-            div.stButton > button:first-child:hover {
-                background-color: #172554 !important;
-                transform: scale(1.02) !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
-        if st.button("📺الشرح والدروس", key="btn_sharh_main"):
+        if st.button("📺 الشرح والدروس", key="btn_sharh_v3"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
-        # زر مخصص للقسم الثاني بنفس الطريقة والألوان الخاصة به
-        # نستخدم كمبرمجين معرفة فريدة عبر المكونات لتخصيص كل زر بشكل مستقل
-        if st.button("📝الامتحانات والاختبارات", key="btn_quiz_main"):
+        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_v3"):
             st.session_state.current_view = "quiz"
-            
-        # كود CSS لتلوين الزر الثاني بالأخضر بشكل منفصل
-        st.markdown("""
-            <style>
-            div:nth-child(2) > div.stButton > button:first-child {
-                background-color: #065F46 !important;
-            }
-            div:nth-child(2) > div.stButton > button:first-child:hover {
-                background-color: #022C22 !important;
-            }
-            </style>
-        """, unsafe_allow_html=True)
             
     st.markdown("---")
 
@@ -147,7 +150,7 @@ elif choice == "🖥️ واجهة الطالب":
     elif st.session_state.current_view == "quiz":
         st.subheader("📝 قسم الامتحانات والتقييمات المستقلة")
         if not quizzes_db:
-            st.info("👋 لا توجد امتحانات مرفوعة حالياً في هذا قسم...")
+            st.info("👋 لا توجد امتحانات مرفوعة حالياً في هذا القسم...")
         else:
             chosen_quiz = st.selectbox("اختر الامتحان المتاح للدخول:", list(quizzes_db.keys()))
             questions = quizzes_db[chosen_quiz]

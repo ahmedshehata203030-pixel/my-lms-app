@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 📝 ضع رابط ملف الـ Google Sheet الخاص بك هنا 
-SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
+SHEET_URL = "ضع_رابط_ملف_جوجل_شيت_الخاص_بك_هنا"
 
 # تحويل الرابط لروابط تقرأ من الشيت مباشرة
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
@@ -63,64 +63,69 @@ if choice == "⚙️ لوحة تحكم الأدمن":
     st.markdown(f"🔗 [اضغط هنا لفتح وتعديل ملف الـ Google Sheet]({SHEET_URL})")
 
 # =========================================================
-# 🖥️ واجهة الطالب (تصميم المربعات الكبيرة المتساوية تماماً)
+# 🖥️ واجهة الطالب
 # =========================================================
 elif choice == "🖥️ واجهة الطالب":
     st.header("🎓 بوابة الطالب التعليمية")
     
-    # تهيئة الحالة الافتراضية للقسم المختار
     if "current_view" not in st.session_state:
         st.session_state.current_view = "sharh"
         
     st.markdown("<br>", unsafe_allow_html=True)
     
-    # حقل الـ CSS لتوحيد وتكبير أزرار الأقسام بالكامل وجعلها على مستوى واحد
+    # 🎨 الـ CSS السحري: تصفير المسافات وتكبير وعرض الأزرار بالكامل لتشبه أول تصميم تماماً بدون زوائد
     st.markdown("""
         <style>
-        /* استهداف أزرار الأقسام الرئيسية لتكبيرها وتطويلها */
+        /* إجبار الأعمدة على التقارب وتقليل الفجوة بينها */
+        div[data-testid="stHorizontalBlock"] {
+            gap: 15px !important;
+        }
+        
+        /* تصميم الأزرار لتكون عريضة وطويلة ومطابقة للتصميم الأول */
         div.stButton > button {
             display: block !important;
             width: 100% !important;
-            min-height: 120px !important; /* زيادة الطول والارتفاع */
-            font-size: 26px !important; /* تكبير حجم الخط */
+            min-height: 90px !important; /* طول مناسب جداً */
+            padding: 20px 40px !important; /* مساحة داخلية تجعلها عريضة */
+            font-size: 25px !important; /* تكبير الخط داخل المربع */
             font-weight: bold !important;
             color: white !important;
-            border-radius: 15px !important;
+            border-radius: 12px !important;
             border: none !important;
-            box-shadow: 0px 5px 15px rgba(0,0,0,0.15) !important;
-            transition: all 0.3s ease !important;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.12) !important;
+            transition: all 0.25s ease !important;
             cursor: pointer !important;
         }
         
-        /* تلوين زر الشرح بالأزرق الملكي */
-        div[data-testid="stColumn"]:nth-of-type(1) div.stButton > button {
-            background-color: #1E3A8A !important;
+        /* المربع الأول: أزرق كحلي ملكي */
+        div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button {
+            background-color: #1A365D !important;
         }
-        div[data-testid="stColumn"]:nth-of-type(1) div.stButton > button:hover {
-            background-color: #172554 !important;
-            transform: translateY(-3px) !important;
+        div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button:hover {
+            background-color: #0F172A !important;
+            transform: translateY(-2px) !important;
         }
         
-        /* تلوين زر الامتحانات بالأخضر الداكن */
-        div[data-testid="stColumn"]:nth-of-type(2) div.stButton > button {
-            background-color: #065F46 !important;
+        /* المربع الثاني: أخضر غامق محترم */
+        div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button {
+            background-color: #064E3B !important;
         }
-        div[data-testid="stColumn"]:nth-of-type(2) div.stButton > button:hover {
+        div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button:hover {
             background-color: #022C22 !important;
-            transform: translateY(-3px) !important;
+            transform: translateY(-2px) !important;
         }
         </style>
     """, unsafe_allow_html=True)
     
-    # 🧱 بناء المربعين الكبار على نفس الصف (Row) وبأحجام متطابقة 🧱
+    # 🧱 بناء المربعين المتقاربين والعراض جنب بعض
     box_sharh, box_quiz = st.columns(2)
     
     with box_sharh:
-        if st.button("📺 الشرح والدروس", key="btn_sharh_v3"):
+        if st.button("📺 الشرح والدروس", key="btn_sharh_final"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
-        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_v3"):
+        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_final"):
             st.session_state.current_view = "quiz"
             
     st.markdown("---")

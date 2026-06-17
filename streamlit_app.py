@@ -99,13 +99,13 @@ elif choice == "🖥️ واجهة الطالب":
             }
             </style>
         """, unsafe_allow_html=True)
-        if st.button("📺 الشرح والدروس", key="btn_sharh_main"):
+        if st.button("📺الشرح والدروس", key="btn_sharh_main"):
             st.session_state.current_view = "sharh"
             
     with box_quiz:
         # زر مخصص للقسم الثاني بنفس الطريقة والألوان الخاصة به
         # نستخدم كمبرمجين معرفة فريدة عبر المكونات لتخصيص كل زر بشكل مستقل
-        if st.button("📝 الامتحانات والاختبارات", key="btn_quiz_main"):
+        if st.button("📝الامتحانات والاختبارات", key="btn_quiz_main"):
             st.session_state.current_view = "quiz"
             
         # كود CSS لتلوين الزر الثاني بالأخضر بشكل منفصل

@@ -117,7 +117,7 @@ elif choice == "🖥️ واجهة الطالب":
         if not courses_db:
             st.info("👋 جاري رفع الفيديوهات والدروس حالياً...")
         else:
-            chosen_course = st.selectbox("اختر الكورس / الدبلومة:", list(courses_db.keys()))
+            chosen_course = st.selectbox("اختر الوحدة:", list(courses_db.keys()))
             lessons_available = courses_db[chosen_course]
             lesson_names = [l['title'] for l in lessons_available]
             chosen_lesson = st.selectbox("اختر الدرس المراد مشاهدته:", lesson_names)

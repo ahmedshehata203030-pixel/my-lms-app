@@ -12,14 +12,13 @@ LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=quizzes")
 
 def clean_date_string(date_str):
-    if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan':
+    if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan' or str(date_str).strip() == '':
         return None
     
     s = str(date_str).strip()
     s = s.replace('/', '-')
     s = re.sub(r'\s+', ' ', s)
     
-    # تحديد هل الوقت صباحي أم مسائي (لو ظهرت م أو ص غصب عنك)
     is_pm = 'م' in s
     is_am = 'ص' in s
     
@@ -40,19 +39,19 @@ def clean_date_string(date_str):
 
 def load_data():
     try:
-        lessons_df = pd.read_csv(LESSONS_CSV)
+        lessons_df = pd.read_csv(LESSONS_CSV, dtype=str) # قراءة البيانات كلها كنصوص صريحة
         courses = {}
         for _, row in lessons_df.iterrows():
-            c_title = row['course_title']
+            c_title = str(row['course_title']).strip()
             if c_title not in courses: courses[c_title] = []
             courses[c_title].append({"title": row['lesson_title'], "video": row['video_url'], "pdf": row['pdf_url']})
     except: courses = {}
 
     try:
-        quizzes_df = pd.read_csv(QUIZZES_CSV)
+        quizzes_df = pd.read_csv(QUIZZES_CSV, dtype=str) # قراءة البيانات كلها كنصوص صريحة لمنع اختفاء الكلام
         quizzes = {}
         for _, row in quizzes_df.iterrows():
-            q_title = row['quiz_title']
+            q_title = str(row['quiz_title']).strip()
             if q_title not in quizzes: quizzes[q_title] = []
             
             start_val = row['start_at'] if 'start_at' in quizzes_df.columns else None
@@ -72,6 +71,9 @@ def load_data():
     return courses, quizzes
 
 st.set_page_config(page_title="منصتي التعليمية", layout="wide")
+
+# تنظيف الكاش تماماً لضمان عدم قراءة بيانات قديمة
+st.cache_data.clear()
 courses_db, quizzes_db = load_data()
 
 st.header("🎓 بوابة الطالب التعليمية")
@@ -109,7 +111,6 @@ elif st.session_state.current_view == "quiz":
     else:
         chosen_quiz = st.selectbox("اختر الامتحان المطلوب للدخول:", list(quizzes_db.keys()))
         
-        # ⏰ توقيت مصر الحالي الحقيقي
         cairo_tz = pytz.timezone('Africa/Cairo')
         now = datetime.now(cairo_tz).replace(tzinfo=None)
         
@@ -120,7 +121,7 @@ elif st.session_state.current_view == "quiz":
         start_dt = clean_date_string(first_q["start_at"])
         end_dt = clean_date_string(first_q["end_at"])
         
-        if (first_q["start_at"] and str(first_q["start_at"]).lower() != 'nan') and not start_dt:
+        if (first_q["start_at"] and str(first_q["start_at"]).lower() != 'nan' and str(first_q["start_at"]).strip() != '') and not start_dt:
             quiz_allowed = False
             error_msg = "⚠️ صيغة التاريخ في الشيت غير صحيحة، يرجى كتابته بصيغة: YYYY-MM-DD HH:MM:SS"
         
@@ -152,7 +153,7 @@ elif st.session_state.current_view == "quiz":
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
                         
-                        # التعديل السحري لعرض النصوص والأرقام بشكل سليم تماماً ودون أخطاء
+                        # دالة عرض الاختيارات الصارمة والنظيفة
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", options_letters, 
                             format_func=lambda x: f"{x} - {str(q['options'][options_letters.index(x)]).strip()}" if pd.notna(q['options'][options_letters.index(x)]) and str(q['options'][options_letters.index(x)]).lower() != 'nan' else x,

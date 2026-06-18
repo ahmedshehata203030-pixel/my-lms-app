@@ -47,7 +47,7 @@ def load_data():
             start_val = row['start_at'] if 'start_at' in quizzes_df.columns else None
             end_val = row['end_at'] if 'end_at' in quizzes_df.columns else None
             
-            # تنظيف وتجهيز حرف الإجابة الصحيحة (لو كاتب optA ياخد A بس)
+            # تنظيف وتجهيز حرف الإجابة الصحيحة
             raw_correct = str(row['correct_opt']).strip().upper()
             correct_letter = raw_correct[-1] if raw_correct.startswith('OPT') else raw_correct
             
@@ -99,8 +99,9 @@ elif st.session_state.current_view == "quiz":
     else:
         chosen_quiz = st.selectbox("اختر الامتحان المطلوب للدخول:", list(quizzes_db.keys()))
         
+        # ⏰ جلب وقت مصر الحالي الحقيقي بالظبط
         cairo_tz = pytz.timezone('Africa/Cairo')
-        now = datetime.now(cairo_tz).replace(tzinfo=None) # توقيت محلي للمقارنة النظيفة
+        now = datetime.now(cairo_tz).replace(tzinfo=None)
         
         first_q = quizzes_db[chosen_quiz][0]
         quiz_allowed = True
@@ -109,13 +110,14 @@ elif st.session_state.current_view == "quiz":
         start_dt = clean_date_string(first_q["start_at"])
         end_dt = clean_date_string(first_q["end_at"])
         
+        # المقارنة المضمونة بعد توحيد التوقيت المصري
         if start_dt and now < start_dt:
             quiz_allowed = False
-            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
+            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد بتوقيت مصر: {first_q['start_at']}"
             
         if end_dt and quiz_allowed and now > end_dt:
             quiz_allowed = False
-            error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد: {first_q['end_at']}"
+            error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد بتوقيت مصر: {first_q['end_at']}"
 
         if not quiz_allowed:
             st.error(error_msg)
@@ -145,7 +147,6 @@ elif st.session_state.current_view == "quiz":
                     if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):
                         submit_time = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
                         
-                        # حساب النتيجة بدقة وحماية
                         correct_count = 0
                         for i, q in enumerate(questions):
                             if str(student_answers[i]).strip().upper() == str(q['correct']).strip().upper():

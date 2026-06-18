@@ -5,7 +5,7 @@ from datetime import datetime
 import pytz
 import re
 
-# 🔗 [1] ضع رابط الجوجل شيت الخاص بك هنا
+# 🔗 [1] رابط الجوجل شيت الخاص بك
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
@@ -14,16 +14,28 @@ QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet
 def clean_date_string(date_str):
     if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan':
         return None
-    s = str(date_str).strip()
-    # تنظيف الحروف العربية وتحويل الفواصل لشرطات بشكل سليم
-    s = s.replace('م', '').replace('ص', '').replace('/', '-')
-    s = re.sub(r'\s+', ' ', s).strip()
     
-    # محاولة قراءة التاريخ بأكثر من صيغة مشهورة
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %I:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+    s = str(date_str).strip()
+    s = s.replace('/', '-')
+    s = re.sub(r'\s+', ' ', s)
+    
+    # تحديد هل الوقت صباحي أم مسائي (لو ظهرت م أو ص غصب عنك)
+    is_pm = 'م' in s
+    is_am = 'ص' in s
+    
+    s = s.replace('م', '').replace('ص', '').strip()
+    
+    formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"]
+    for fmt in formats:
         try:
-            return datetime.strptime(s, fmt)
-        except: pass
+            dt = datetime.strptime(s, fmt)
+            if is_pm and dt.hour < 12:
+                dt = dt.replace(hour=dt.hour + 12)
+            elif is_am and dt.hour == 12:
+                dt = dt.replace(hour=0)
+            return dt
+        except:
+            pass
     return None
 
 def load_data():
@@ -43,11 +55,9 @@ def load_data():
             q_title = row['quiz_title']
             if q_title not in quizzes: quizzes[q_title] = []
             
-            # قراءة وتنظيف أوقات البداية والنهاية
             start_val = row['start_at'] if 'start_at' in quizzes_df.columns else None
             end_val = row['end_at'] if 'end_at' in quizzes_df.columns else None
             
-            # تنظيف وتجهيز حرف الإجابة الصحيحة
             raw_correct = str(row['correct_opt']).strip().upper()
             correct_letter = raw_correct[-1] if raw_correct.startswith('OPT') else raw_correct
             
@@ -99,7 +109,7 @@ elif st.session_state.current_view == "quiz":
     else:
         chosen_quiz = st.selectbox("اختر الامتحان المطلوب للدخول:", list(quizzes_db.keys()))
         
-        # ⏰ جلب وقت مصر الحالي الحقيقي بالظبط
+        # ⏰ توقيت مصر الحالي الحقيقي
         cairo_tz = pytz.timezone('Africa/Cairo')
         now = datetime.now(cairo_tz).replace(tzinfo=None)
         
@@ -110,14 +120,17 @@ elif st.session_state.current_view == "quiz":
         start_dt = clean_date_string(first_q["start_at"])
         end_dt = clean_date_string(first_q["end_at"])
         
-        # المقارنة المضمونة بعد توحيد التوقيت المصري
-        if start_dt and now < start_dt:
+        if (first_q["start_at"] and str(first_q["start_at"]).lower() != 'nan') and not start_dt:
             quiz_allowed = False
-            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد بتوقيت مصر: {first_q['start_at']}"
+            error_msg = "⚠️ صيغة التاريخ في الشيت غير صحيحة، يرجى كتابته بصيغة: YYYY-MM-DD HH:MM:SS"
+        
+        if quiz_allowed and start_dt and now < start_dt:
+            quiz_allowed = False
+            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
             
-        if end_dt and quiz_allowed and now > end_dt:
+        if quiz_allowed and end_dt and now > end_dt:
             quiz_allowed = False
-            error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد بتوقيت مصر: {first_q['end_at']}"
+            error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد: {first_q['end_at']}"
 
         if not quiz_allowed:
             st.error(error_msg)
@@ -138,9 +151,11 @@ elif st.session_state.current_view == "quiz":
                     for i, q in enumerate(questions):
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
+                        
+                        # التعديل السحري لعرض النصوص والأرقام بشكل سليم تماماً ودون أخطاء
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", options_letters, 
-                            format_func=lambda x: f"{x} - {q['options'][options_letters.index(x)]}" if pd.notna(q['options'][options_letters.index(x)]) else x,
+                            format_func=lambda x: f"{x} - {str(q['options'][options_letters.index(x)]).strip()}" if pd.notna(q['options'][options_letters.index(x)]) and str(q['options'][options_letters.index(x)]).lower() != 'nan' else x,
                             key=f"q_{chosen_quiz}_{i}"
                         )
                     
@@ -154,7 +169,7 @@ elif st.session_state.current_view == "quiz":
                                 
                         score = int((correct_count / len(questions)) * 100)
                         
-                        # 🔗 [2] ضع هنا رابط تطبيق الويب الخاص بك (الذي ينتهي بـ exec)
+                        # 🔗 [2] ضع رابط تطبيق الويب الخاص بك هنا (الذي ينتهي بـ exec)
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                         
                         payload = {

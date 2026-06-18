@@ -5,7 +5,7 @@ from datetime import datetime
 import pytz
 import re
 
-# 🔗 [1] رابط الجوجل شيت الخاص بك
+# 🔗 [1] ضع رابط الجوجل شيت الخاص بك هنا
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
@@ -15,8 +15,8 @@ def clean_date_string(date_str):
     if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan':
         return None
     s = str(date_str).strip()
-    # تنظيف الحروف العربية مثل م أو ص وتحويل الفواصل لشرطات
-    s = s.replace('م', '').replace('ص', '').replace('/', '-').}
+    # تنظيف الحروف العربية وتحويل الفواصل لشرطات بشكل سليم
+    s = s.replace('م', '').replace('ص', '').replace('/', '-')
     s = re.sub(r'\s+', ' ', s).strip()
     
     # محاولة قراءة التاريخ بأكثر من صيغة مشهورة

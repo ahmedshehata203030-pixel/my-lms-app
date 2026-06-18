@@ -9,7 +9,6 @@ import time
 # 🔗 [1] رابط الجوجل شيت الخاص بك
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
-# تعديل ذكي لكسر كاش السيرفر وإجبار الشيت على التحديث فوراً
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=lessons&v={int(time.time())}")
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=quizzes&v={int(time.time())}")
 
@@ -163,10 +162,12 @@ elif st.session_state.current_view == "quiz":
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
                         
+                        # 🛠️ التعديل الجذري: توليد كيز (Keys) فريدة ومقاومة لتشابه أو تباين النصوص
                         student_answers[i] = st.radio(
-                            "اختر الإجابة:", options_letters, 
+                            "اختر الإجابة:", 
+                            options_letters, 
                             format_func=lambda x: f"{x} - {q['options'][options_letters.index(x)]}" if q['options'][options_letters.index(x)] != "" else x,
-                            key=f"q_{chosen_quiz}_{i}"
+                            key=f"radio_{chosen_quiz}_q{i}_{int(time.time())}" # الكي الفريد بالوقت ورق رقم السؤال
                         )
                     
                     if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):

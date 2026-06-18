@@ -14,32 +14,25 @@ QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet
 def clean_date_string(date_str):
     if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan' or str(date_str).strip() == '':
         return None
-    
     s = str(date_str).strip()
     s = s.replace('/', '-')
     s = re.sub(r'\s+', ' ', s)
-    
     is_pm = 'م' in s
     is_am = 'ص' in s
-    
     s = s.replace('م', '').replace('ص', '').strip()
-    
     formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"]
     for fmt in formats:
         try:
             dt = datetime.strptime(s, fmt)
-            if is_pm and dt.hour < 12:
-                dt = dt.replace(hour=dt.hour + 12)
-            elif is_am and dt.hour == 12:
-                dt = dt.replace(hour=0)
+            if is_pm and dt.hour < 12: dt = dt.replace(hour=dt.hour + 12)
+            elif is_am and dt.hour == 12: dt = dt.replace(hour=0)
             return dt
-        except:
-            pass
+        except: pass
     return None
 
 def load_data():
     try:
-        lessons_df = pd.read_csv(LESSONS_CSV, dtype=str) # قراءة البيانات كلها كنصوص صريحة
+        lessons_df = pd.read_csv(LESSONS_CSV, dtype=str)
         courses = {}
         for _, row in lessons_df.iterrows():
             c_title = str(row['course_title']).strip()
@@ -48,31 +41,44 @@ def load_data():
     except: courses = {}
 
     try:
-        quizzes_df = pd.read_csv(QUIZZES_CSV, dtype=str) # قراءة البيانات كلها كنصوص صريحة لمنع اختفاء الكلام
+        quizzes_df = pd.read_csv(QUIZZES_CSV, dtype=str)
+        # تنظيف أسماء الأعمدة من المسافات وتحويلها لحروف صغيرة للأمان الصارم
+        quizzes_df.columns = [str(c).strip().lower() for c in quizzes_df.columns]
+        
         quizzes = {}
         for _, row in quizzes_df.iterrows():
-            q_title = str(row['quiz_title']).strip()
+            # البحث عن عمود العنوان والأسئلة بأي صيغة حالة أحرف
+            q_title = str(row.get('quiz_title', row.get('quiz_title', ''))).strip()
+            if not q_title or q_title.lower() == 'nan': continue
+            
             if q_title not in quizzes: quizzes[q_title] = []
             
-            start_val = row['start_at'] if 'start_at' in quizzes_df.columns else None
-            end_val = row['end_at'] if 'end_at' in quizzes_df.columns else None
+            question_text = row.get('question_text', '')
             
-            raw_correct = str(row['correct_opt']).strip().upper()
-            correct_letter = raw_correct[-1] if raw_correct.startswith('OPT') else raw_correct
+            # جلب الاختيارات الأربعة بذكاء سواء كانت مكتوبة حروف كبيرة أو صغيرة في الشيت
+            opt_a = row.get('opta', row.get('opta', ''))
+            opt_b = row.get('optb', row.get('optb', ''))
+            opt_c = row.get('optc', row.get('optc', ''))
+            opt_d = row.get('optd', row.get('optd', ''))
+            
+            correct_val = str(row.get('correct_opt', '')).strip().upper()
+            correct_letter = correct_val[-1] if correct_val.startswith('OPT') else correct_val
+            
+            start_val = row.get('start_at', None)
+            end_val = row.get('end_at', None)
             
             quizzes[q_title].append({
-                "question": row['question_text'],
-                "options": [row['optA'], row['optB'], row['optC'], row['optD']],
+                "question": question_text,
+                "options": [opt_a, opt_b, opt_c, opt_d],
                 "correct": correct_letter,
                 "start_at": start_val,
                 "end_at": end_val
             })
-    except: quizzes = {}
+    except Exception as e: 
+        quizzes = {}
     return courses, quizzes
 
 st.set_page_config(page_title="منصتي التعليمية", layout="wide")
-
-# تنظيف الكاش تماماً لضمان عدم قراءة بيانات قديمة
 st.cache_data.clear()
 courses_db, quizzes_db = load_data()
 
@@ -114,7 +120,8 @@ elif st.session_state.current_view == "quiz":
         cairo_tz = pytz.timezone('Africa/Cairo')
         now = datetime.now(cairo_tz).replace(tzinfo=None)
         
-        first_q = quizzes_db[chosen_quiz][0]
+        questions = quizzes_db[chosen_quiz]
+        first_q = questions[0]
         quiz_allowed = True
         error_msg = ""
         
@@ -140,7 +147,6 @@ elif st.session_state.current_view == "quiz":
             if not student_name:
                 st.warning("⚠️ يجب كتابة اسمك أولاً لتتمكن من حل الامتحان ورصد النتيجة.")
             else:
-                questions = quizzes_db[chosen_quiz]
                 if f"start_{chosen_quiz}" not in st.session_state:
                     st.session_state[f"start_{chosen_quiz}"] = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
                     
@@ -153,10 +159,10 @@ elif st.session_state.current_view == "quiz":
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
                         
-                        # دالة عرض الاختيارات الصارمة والنظيفة
+                        # دالة العرض الصارمة والمقاومة لاختفاء النصوص
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", options_letters, 
-                            format_func=lambda x: f"{x} - {str(q['options'][options_letters.index(x)]).strip()}" if pd.notna(q['options'][options_letters.index(x)]) and str(q['options'][options_letters.index(x)]).lower() != 'nan' else x,
+                            format_func=lambda x: f"{x} - {str(q['options'][options_letters.index(x)]).strip()}" if pd.notna(q['options'][options_letters.index(x)]) and str(q['options'][options_letters.index(x)]).lower() != 'nan' and str(q['options'][options_letters.index(x)]).strip() != '' else x,
                             key=f"q_{chosen_quiz}_{i}"
                         )
                     

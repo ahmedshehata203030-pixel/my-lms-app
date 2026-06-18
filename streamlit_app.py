@@ -30,38 +30,43 @@ def clean_date_string(date_str):
         except: pass
     return None
 
+def force_string(val):
+    # دالة سحرية لتحويل أي قيمة (حتى لو كانت NaN أو فاضية) لنص صريح ونظيف
+    if pd.isna(val) or str(val).lower() == 'nan':
+        return ""
+    return str(val).strip()
+
 def load_data():
     try:
         lessons_df = pd.read_csv(LESSONS_CSV, dtype=str)
         courses = {}
         for _, row in lessons_df.iterrows():
-            c_title = str(row['course_title']).strip()
+            c_title = force_string(row['course_title'])
+            if not c_title: continue
             if c_title not in courses: courses[c_title] = []
             courses[c_title].append({"title": row['lesson_title'], "video": row['video_url'], "pdf": row['pdf_url']})
     except: courses = {}
 
     try:
         quizzes_df = pd.read_csv(QUIZZES_CSV, dtype=str)
-        # تنظيف أسماء الأعمدة من المسافات وتحويلها لحروف صغيرة للأمان الصارم
         quizzes_df.columns = [str(c).strip().lower() for c in quizzes_df.columns]
         
         quizzes = {}
         for _, row in quizzes_df.iterrows():
-            # البحث عن عمود العنوان والأسئلة بأي صيغة حالة أحرف
-            q_title = str(row.get('quiz_title', row.get('quiz_title', ''))).strip()
-            if not q_title or q_title.lower() == 'nan': continue
+            q_title = force_string(row.get('quiz_title', ''))
+            if not q_title: continue
             
             if q_title not in quizzes: quizzes[q_title] = []
             
-            question_text = row.get('question_text', '')
+            question_text = force_string(row.get('question_text', ''))
             
-            # جلب الاختيارات الأربعة بذكاء سواء كانت مكتوبة حروف كبيرة أو صغيرة في الشيت
-            opt_a = row.get('opta', row.get('opta', ''))
-            opt_b = row.get('optb', row.get('optb', ''))
-            opt_c = row.get('optc', row.get('optc', ''))
-            opt_d = row.get('optd', row.get('optd', ''))
+            # إجبار قراءة الاختيارات الأربعة كنصوص حتى لو كانت مكتوبة بالعربي
+            opt_a = force_string(row.get('opta', ''))
+            opt_b = force_string(row.get('optb', ''))
+            opt_c = force_string(row.get('optc', ''))
+            opt_d = force_string(row.get('optd', ''))
             
-            correct_val = str(row.get('correct_opt', '')).strip().upper()
+            correct_val = force_string(row.get('correct_opt', '')).upper()
             correct_letter = correct_val[-1] if correct_val.startswith('OPT') else correct_val
             
             start_val = row.get('start_at', None)
@@ -74,7 +79,7 @@ def load_data():
                 "start_at": start_val,
                 "end_at": end_val
             })
-    except Exception as e: 
+    except: 
         quizzes = {}
     return courses, quizzes
 
@@ -159,10 +164,10 @@ elif st.session_state.current_view == "quiz":
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
                         
-                        # دالة العرض الصارمة والمقاومة لاختفاء النصوص
+                        # دالة العرض الصارمة جداً لعرض النص المكتوب مهما كان نوعه
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", options_letters, 
-                            format_func=lambda x: f"{x} - {str(q['options'][options_letters.index(x)]).strip()}" if pd.notna(q['options'][options_letters.index(x)]) and str(q['options'][options_letters.index(x)]).lower() != 'nan' and str(q['options'][options_letters.index(x)]).strip() != '' else x,
+                            format_func=lambda x: f"{x} - {q['options'][options_letters.index(x)]}" if q['options'][options_letters.index(x)] != "" else x,
                             key=f"q_{chosen_quiz}_{i}"
                         )
                     

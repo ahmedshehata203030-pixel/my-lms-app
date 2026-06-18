@@ -137,7 +137,7 @@ elif st.session_state.current_view == "quiz":
         
         if quiz_allowed and start_dt and now < start_dt:
             quiz_allowed = False
-            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
+            error_msg = f"⏳ عذراً، هذا الامتحان لم بدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
             
         if quiz_allowed and end_dt and now > end_dt:
             quiz_allowed = False
@@ -160,14 +160,21 @@ elif st.session_state.current_view == "quiz":
                     student_answers = {}
                     for i, q in enumerate(questions):
                         st.write(f"**سؤال {i+1}: {q['question']}**")
-                        options_letters = ["A", "B", "C", "D"]
                         
-                        # 🛠️ التعديل الجذري: توليد كيز (Keys) فريدة ومقاومة لتشابه أو تباين النصوص
+                        # 🛠️ الحل السحري: بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم فريدة
+                        letters = ["A", "B", "C", "D"]
+                        display_options = []
+                        for idx, letter in enumerate(letters):
+                            opt_text = q['options'][idx]
+                            if opt_text != "":
+                                display_options.append(f"{letter} - {opt_text}")
+                            else:
+                                display_options.append(letter)
+                        
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", 
-                            options_letters, 
-                            format_func=lambda x: f"{x} - {q['options'][options_letters.index(x)]}" if q['options'][options_letters.index(x)] != "" else x,
-                            key=f"radio_{chosen_quiz}_q{i}_{int(time.time())}" # الكي الفريد بالوقت ورق رقم السؤال
+                            options=display_options,
+                            key=f"radio_{chosen_quiz}_q_{i}" # مفتاح ثابت ومستقر
                         )
                     
                     if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):
@@ -175,7 +182,9 @@ elif st.session_state.current_view == "quiz":
                         
                         correct_count = 0
                         for i, q in enumerate(questions):
-                            if str(student_answers[i]).strip().upper() == str(q['correct']).strip().upper():
+                            # استخراج الحرف المختار (A أو B أو C أو D) من النص الكامل
+                            selected_letter = str(student_answers[i]).split(" - ")[0].strip().upper()
+                            if selected_letter == str(q['correct']).strip().upper():
                                 correct_count += 1
                                 
                         score = int((correct_count / len(questions)) * 100)

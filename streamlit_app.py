@@ -4,12 +4,14 @@ import requests
 from datetime import datetime
 import pytz
 import re
+import time
 
 # 🔗 [1] رابط الجوجل شيت الخاص بك
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
-LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
-QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=quizzes")
+# تعديل ذكي لكسر كاش السيرفر وإجبار الشيت على التحديث فوراً
+LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=lessons&v={int(time.time())}")
+QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=quizzes&v={int(time.time())}")
 
 def clean_date_string(date_str):
     if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan' or str(date_str).strip() == '':
@@ -31,7 +33,6 @@ def clean_date_string(date_str):
     return None
 
 def force_string(val):
-    # دالة سحرية لتحويل أي قيمة (حتى لو كانت NaN أو فاضية) لنص صريح ونظيف
     if pd.isna(val) or str(val).lower() == 'nan':
         return ""
     return str(val).strip()
@@ -59,8 +60,6 @@ def load_data():
             if q_title not in quizzes: quizzes[q_title] = []
             
             question_text = force_string(row.get('question_text', ''))
-            
-            # إجبار قراءة الاختيارات الأربعة كنصوص حتى لو كانت مكتوبة بالعربي
             opt_a = force_string(row.get('opta', ''))
             opt_b = force_string(row.get('optb', ''))
             opt_c = force_string(row.get('optc', ''))
@@ -164,7 +163,6 @@ elif st.session_state.current_view == "quiz":
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         options_letters = ["A", "B", "C", "D"]
                         
-                        # دالة العرض الصارمة جداً لعرض النص المكتوب مهما كان نوعه
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", options_letters, 
                             format_func=lambda x: f"{x} - {q['options'][options_letters.index(x)]}" if q['options'][options_letters.index(x)] != "" else x,

@@ -2,13 +2,29 @@ import streamlit as st
 import pandas as pd
 import requests
 from datetime import datetime
-import pytz  # مكتبة لضبط التوقيت المحلي لمصر
+import pytz
+import re
 
 # 🔗 [1] رابط الجوجل شيت الخاص بك
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=lessons")
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", "/gviz/tq?tqx=out:csv&sheet=quizzes")
+
+def clean_date_string(date_str):
+    if not date_str or pd.isna(date_str) or str(date_str).lower() == 'nan':
+        return None
+    s = str(date_str).strip()
+    # تنظيف الحروف العربية مثل م أو ص وتحويل الفواصل لشرطات
+    s = s.replace('م', '').replace('ص', '').replace('/', '-').}
+    s = re.sub(r'\s+', ' ', s).strip()
+    
+    # محاولة قراءة التاريخ بأكثر من صيغة مشهورة
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %I:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(s, fmt)
+        except: pass
+    return None
 
 def load_data():
     try:
@@ -27,16 +43,20 @@ def load_data():
             q_title = row['quiz_title']
             if q_title not in quizzes: quizzes[q_title] = []
             
-            # قراءة أوقات البداية والنهاية من الشيت
-            start_time_str = str(row['start_at']) if 'start_at' in quizzes_df.columns and pd.notna(row['start_at']) else None
-            end_time_str = str(row['end_at']) if 'end_at' in quizzes_df.columns and pd.notna(row['end_at']) else None
+            # قراءة وتنظيف أوقات البداية والنهاية
+            start_val = row['start_at'] if 'start_at' in quizzes_df.columns else None
+            end_val = row['end_at'] if 'end_at' in quizzes_df.columns else None
+            
+            # تنظيف وتجهيز حرف الإجابة الصحيحة (لو كاتب optA ياخد A بس)
+            raw_correct = str(row['correct_opt']).strip().upper()
+            correct_letter = raw_correct[-1] if raw_correct.startswith('OPT') else raw_correct
             
             quizzes[q_title].append({
                 "question": row['question_text'],
                 "options": [row['optA'], row['optB'], row['optC'], row['optD']],
-                "correct": row['correct_opt'],
-                "start_at": start_time_str,
-                "end_at": end_time_str
+                "correct": correct_letter,
+                "start_at": start_val,
+                "end_at": end_val
             })
     except: quizzes = {}
     return courses, quizzes
@@ -47,7 +67,6 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# 🎨 تصميم الأزرار
 st.markdown("""
     <style>
     div[data-testid="stHorizontalBlock"] { display: flex !important; justify-content: center !important; gap: 25px !important; }
@@ -80,33 +99,23 @@ elif st.session_state.current_view == "quiz":
     else:
         chosen_quiz = st.selectbox("اختر الامتحان المطلوب للدخول:", list(quizzes_db.keys()))
         
-        # ⏰ جلب وقت مصر الحالي بالظبط
         cairo_tz = pytz.timezone('Africa/Cairo')
-        now = datetime.now(cairo_tz)
+        now = datetime.now(cairo_tz).replace(tzinfo=None) # توقيت محلي للمقارنة النظيفة
         
         first_q = quizzes_db[chosen_quiz][0]
         quiz_allowed = True
         error_msg = ""
         
-        # فحص ميعاد البدء
-        if first_q["start_at"] and first_q["start_at"] != "nan":
-            try:
-                start_dt = datetime.strptime(first_q["start_at"].strip(), "%Y-%m-%d %H:%M:%S")
-                start_dt = cairo_tz.localize(start_dt)
-                if now < start_dt:
-                    quiz_allowed = False
-                    error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
-            except: pass
+        start_dt = clean_date_string(first_q["start_at"])
+        end_dt = clean_date_string(first_q["end_at"])
+        
+        if start_dt and now < start_dt:
+            quiz_allowed = False
+            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
             
-        # فحص ميعاد النهاية
-        if first_q["end_at"] and first_q["end_at"] != "nan" and quiz_allowed:
-            try:
-                end_dt = datetime.strptime(first_q["end_at"].strip(), "%Y-%m-%d %H:%M:%S")
-                end_dt = cairo_tz.localize(end_dt)
-                if now > end_dt:
-                    quiz_allowed = False
-                    error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد: {first_q['end_at']}"
-            except: pass
+        if end_dt and quiz_allowed and now > end_dt:
+            quiz_allowed = False
+            error_msg = f"🚫 عذراً، انتهى الوقت المحدد لحل هذا الامتحان. كان آخر ميعاد: {first_q['end_at']}"
 
         if not quiz_allowed:
             st.error(error_msg)
@@ -117,7 +126,7 @@ elif st.session_state.current_view == "quiz":
             else:
                 questions = quizzes_db[chosen_quiz]
                 if f"start_{chosen_quiz}" not in st.session_state:
-                    st.session_state[f"start_{chosen_quiz}"] = now.strftime("%Y-%m-%d %H:%M:%S")
+                    st.session_state[f"start_{chosen_quiz}"] = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
                     
                 with st.form(key=f"quiz_form_{chosen_quiz}"):
                     st.markdown(f"### 📋 {chosen_quiz}")
@@ -135,8 +144,14 @@ elif st.session_state.current_view == "quiz":
                     
                     if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):
                         submit_time = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
-                        correct = sum(1 for i, q in enumerate(questions) if student_answers[i] == q['correct'])
-                        score = int((correct / len(questions)) * 100)
+                        
+                        # حساب النتيجة بدقة وحماية
+                        correct_count = 0
+                        for i, q in enumerate(questions):
+                            if str(student_answers[i]).strip().upper() == str(q['correct']).strip().upper():
+                                correct_count += 1
+                                
+                        score = int((correct_count / len(questions)) * 100)
                         
                         # 🔗 [2] ضع هنا رابط تطبيق الويب الخاص بك (الذي ينتهي بـ exec)
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"

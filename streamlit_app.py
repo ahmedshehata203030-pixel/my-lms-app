@@ -89,34 +89,35 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# 🛠️ تدمير كامل لشريط الأدوات وأيقونة جيت هاب عبر الـ CSS الشامل والنهائي
+# 🛠️ الـ CSS الذكي: إخفاء أيقونة جيت هاب والقلم والمشاركة فقط، وتثبيت الـ Dark Mode والثلاث نقط
 st.markdown("""
     <style>
-    /* إخفاء شريط الهيدر العلوي كاملاً بكل ما يحتويه */
-    header, [data-testid="stHeader"] {
-        display: none !important;
-        visibility: hidden !important;
-        height: 0px !important;
-    }
-    
-    /* استهداف وإخفاء أي زر للأكشن أو أيقونات جيت هاب أو التطوير */
-    .stAppDeployButton, 
+    /* 1. إخفاء أيقونة جيت هاب وزر عرض الكود المصدري وزر التثبيت والـ Badge */
     a[href*="github.com"], 
     button[title="View source"], 
-    [data-testid="stActionButton"],
+    .stAppDeployButton,
     [class*="viewerBadge"],
     .viewerBadge_link__1S137,
-    #MainMenu {
+    [data-testid="stActionButton"] {
         display: none !important;
         visibility: hidden !important;
     }
     
-    /* ضبط مسافات التطبيق بعد حذف الهيدر لتبدو نظيفة */
-    .block-container {
-        padding-top: 2rem !important;
+    /* 2. إخفاء زر التعديل والقلم وأي أزرار تطوير أخرى داخل شريط الأدوات العلوي */
+    [data-testid="stHeader"] button[aria-label="Manage app"],
+    [data-testid="stHeader"] button[aria-label="Share this app"],
+    [data-testid="stHeader"] button:not(#MainMenu) {
+        display: none !important;
+        visibility: hidden !important;
     }
     
-    /* تنسيق أزرار التنقل الرئيسية للمنصة */
+    /* 3. التأكيد المطلق على إظهار قائمة الثلاث نقط الرئيسية والـ Dark Mode */
+    #MainMenu, [data-testid="stHeader"] button#MainMenu {
+        display: inline-flex !important;
+        visibility: visible !important;
+    }
+    
+    /* 4. تنسيق أزرار التنقل الرئيسية للمنصة */
     div[data-testid="stHorizontalBlock"] { 
         display: flex !important; 
         justify-content: center !important; 
@@ -203,7 +204,6 @@ elif st.session_state.current_view == "quiz":
                     for i, q in enumerate(questions):
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         
-                        # بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم صريحة لمنع تهنيج المتصفح
                         display_options = []
                         letters = ["A", "B", "C", "D"]
                         for idx, letter in enumerate(letters):
@@ -224,14 +224,13 @@ elif st.session_state.current_view == "quiz":
                         
                         correct_count = 0
                         for i, q in enumerate(questions):
-                            # استخراج الحرف الأول فقط للمقارنة (A, B, C, D)
                             selected_letter = str(student_answers[i]).split(" - ")[0].strip().upper()
                             if selected_letter == str(q['correct']).strip().upper():
                                 correct_count += 1
                                 
                         score = int((correct_count / len(questions)) * 100)
                         
-                        # 🔗 [2] ضع رابط تطبيق الويب الخاص بك هنا (الذي ينتهي بـ exec) في السطر بالأسفل مباشرة:
+                        # 🔗 [2] رابط تطبيق الويب الخاص بك
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                         
                         payload = {

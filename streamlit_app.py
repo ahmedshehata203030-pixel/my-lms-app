@@ -9,6 +9,7 @@ import time
 # 🔗 [1] رابط الجوجل شيت الخاص بك
 SHEET_URL = "https://docs.google.com/spreadsheets/d/11sa1GDAYCez4b17aI1hDPKJDtfj953ySj8OMYOxbzTI/edit?usp=sharing"
 
+# كسر كاش السيرفر لضمان قراءة البيانات اللحظية من الشيت
 LESSONS_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=lessons&v={int(time.time())}")
 QUIZZES_CSV = SHEET_URL.replace("/edit?usp=sharing", f"/gviz/tq?tqx=out:csv&sheet=quizzes&v={int(time.time())}")
 
@@ -137,7 +138,7 @@ elif st.session_state.current_view == "quiz":
         
         if quiz_allowed and start_dt and now < start_dt:
             quiz_allowed = False
-            error_msg = f"⏳ عذراً، هذا الامتحان لم بدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
+            error_msg = f"⏳ عذراً، هذا الامتحان لم يبدأ بعد. ميعاد البدء المحدد: {first_q['start_at']}"
             
         if quiz_allowed and end_dt and now > end_dt:
             quiz_allowed = False
@@ -161,12 +162,12 @@ elif st.session_state.current_view == "quiz":
                     for i, q in enumerate(questions):
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         
-                        # 🛠️ الحل السحري: بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم فريدة
-                        letters = ["A", "B", "C", "D"]
+                        # 🛠️ بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم فريدة لمنع تهنيج المتصفح
                         display_options = []
+                        letters = ["A", "B", "C", "D"]
                         for idx, letter in enumerate(letters):
-                            opt_text = q['options'][idx]
-                            if opt_text != "":
+                            opt_text = str(q['options'][idx]).strip()
+                            if opt_text != "" and opt_text.lower() != 'nan':
                                 display_options.append(f"{letter} - {opt_text}")
                             else:
                                 display_options.append(letter)
@@ -174,7 +175,7 @@ elif st.session_state.current_view == "quiz":
                         student_answers[i] = st.radio(
                             "اختر الإجابة:", 
                             options=display_options,
-                            key=f"radio_{chosen_quiz}_q_{i}" # مفتاح ثابت ومستقر
+                            key=f"quiz_radio_q_{i}_{chosen_quiz}"
                         )
                     
                     if st.form_submit_button("📥 إرسال الإجابات وإنهاء الامتحان"):
@@ -182,7 +183,7 @@ elif st.session_state.current_view == "quiz":
                         
                         correct_count = 0
                         for i, q in enumerate(questions):
-                            # استخراج الحرف المختار (A أو B أو C أو D) من النص الكامل
+                            # استخراج الحرف الأول فقط للمقارنة (A, B, C, D)
                             selected_letter = str(student_answers[i]).split(" - ")[0].strip().upper()
                             if selected_letter == str(q['correct']).strip().upper():
                                 correct_count += 1

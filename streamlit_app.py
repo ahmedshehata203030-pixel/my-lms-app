@@ -89,12 +89,45 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
+# 🛠️ حقن الـ CSS القوي لإخفاء شريط جيت هاب والقائمة تماماً من واجهة الطالب
 st.markdown("""
     <style>
-    div[data-testid="stHorizontalBlock"] { display: flex !important; justify-content: center !important; gap: 25px !important; }
-    div.stButton > button { width: 100% !important; height: 110px !important; font-size: 26px !important; font-weight: bold !important; color: white !important; border-radius: 15px !important; }
-    div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button { background-color: #1A365D !important; }
-    div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button { background-color: #064E3B !important; }
+    /* 1. إخفاء أيقونة جيت هاب، شريط الـ Header العلوي، وزر التثبيت والأكشن */
+    header, 
+    .stAppDeployButton, 
+    a[href*="github.com"], 
+    button[title="View source"], 
+    [data-testid="stActionButton"],
+    .viewerBadge_link__1S137 {
+        display: none !important;
+        visibility: hidden !important;
+    }
+    
+    /* 2. إخفاء قائمة الثلاث نقط الرئيسية لمزيد من الأمان */
+    #MainMenu {
+        visibility: hidden !important;
+    }
+    
+    /* 3. تنسيق أزرار التنقل الرئيسية للمنصة */
+    div[data-testid="stHorizontalBlock"] { 
+        display: flex !important; 
+        justify-content: center !important; 
+        gap: 25px !important; 
+    }
+    div.stButton > button { 
+        width: 100% !important; 
+        height: 110px !important; 
+        font-size: 26px !important; 
+        font-weight: bold !important; 
+        color: white !important; 
+        border-radius: 15px !important; 
+    }
+    div[data-testid="stHorizontalBlock"] > div:nth-of-type(1) div.stButton > button { 
+        background-color: #1A365D !important; 
+    }
+    div[data-testid="stHorizontalBlock"] > div:nth-of-type(2) div.stButton > button { 
+        background-color: #064E3B !important; 
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -162,7 +195,7 @@ elif st.session_state.current_view == "quiz":
                     for i, q in enumerate(questions):
                         st.write(f"**سؤال {i+1}: {q['question']}**")
                         
-                        # 🛠️ بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم فريدة لمنع تهنيج المتصفح
+                        # بناء الاختيارات مسبقاً وتمريرها مباشرة كقيم صريحة لمنع تهنيج المتصفح
                         display_options = []
                         letters = ["A", "B", "C", "D"]
                         for idx, letter in enumerate(letters):
@@ -190,7 +223,7 @@ elif st.session_state.current_view == "quiz":
                                 
                         score = int((correct_count / len(questions)) * 100)
                         
-                        # 🔗 [2] ضع رابط تطبيق الويب الخاص بك هنا (الذي ينتهي بـ exec)
+                        # 🔗 [2] ضع رابط تطبيق الويب الخاص بك هنا (الذي ينتهي بـ exec) في السطر بالأسفل مباشرة:
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                         
                         payload = {

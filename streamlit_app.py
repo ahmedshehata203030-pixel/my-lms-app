@@ -89,26 +89,34 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# 🛠️ حقن الـ CSS القوي لإخفاء شريط جيت هاب والقائمة تماماً من واجهة الطالب
+# 🛠️ تدمير كامل لشريط الأدوات وأيقونة جيت هاب عبر الـ CSS الشامل والنهائي
 st.markdown("""
     <style>
-    /* 1. إخفاء أيقونة جيت هاب، شريط الـ Header العلوي، وزر التثبيت والأكشن */
-    header, 
+    /* إخفاء شريط الهيدر العلوي كاملاً بكل ما يحتويه */
+    header, [data-testid="stHeader"] {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0px !important;
+    }
+    
+    /* استهداف وإخفاء أي زر للأكشن أو أيقونات جيت هاب أو التطوير */
     .stAppDeployButton, 
     a[href*="github.com"], 
     button[title="View source"], 
     [data-testid="stActionButton"],
-    .viewerBadge_link__1S137 {
+    [class*="viewerBadge"],
+    .viewerBadge_link__1S137,
+    #MainMenu {
         display: none !important;
         visibility: hidden !important;
     }
     
-    /* 2. إخفاء قائمة الثلاث نقط الرئيسية لمزيد من الأمان */
-    #MainMenu {
-        visibility: hidden !important;
+    /* ضبط مسافات التطبيق بعد حذف الهيدر لتبدو نظيفة */
+    .block-container {
+        padding-top: 2rem !important;
     }
     
-    /* 3. تنسيق أزرار التنقل الرئيسية للمنصة */
+    /* تنسيق أزرار التنقل الرئيسية للمنصة */
     div[data-testid="stHorizontalBlock"] { 
         display: flex !important; 
         justify-content: center !important; 

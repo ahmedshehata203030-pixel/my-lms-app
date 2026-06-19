@@ -89,10 +89,9 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# 🛠️ الـ CSS الذكي: إخفاء أيقونة جيت هاب والقلم والمشاركة فقط، وتثبيت الـ Dark Mode والثلاث نقط
+# 🛠️ الـ CSS الذكي لتعطيل الجيت هاب والإبقاء على الـ Dark Mode والثلاث نقط
 st.markdown("""
     <style>
-    /* 1. إخفاء أيقونة جيت هاب وزر عرض الكود المصدري وزر التثبيت والـ Badge */
     a[href*="github.com"], 
     button[title="View source"], 
     .stAppDeployButton,
@@ -102,22 +101,16 @@ st.markdown("""
         display: none !important;
         visibility: hidden !important;
     }
-    
-    /* 2. إخفاء زر التعديل والقلم وأي أزرار تطوير أخرى داخل شريط الأدوات العلوي */
     [data-testid="stHeader"] button[aria-label="Manage app"],
     [data-testid="stHeader"] button[aria-label="Share this app"],
     [data-testid="stHeader"] button:not(#MainMenu) {
         display: none !important;
         visibility: hidden !important;
     }
-    
-    /* 3. التأكيد المطلق على إظهار قائمة الثلاث نقط الرئيسية والـ Dark Mode */
     #MainMenu, [data-testid="stHeader"] button#MainMenu {
         display: inline-flex !important;
         visibility: visible !important;
     }
-    
-    /* 4. تنسيق أزرار التنقل الرئيسية للمنصة */
     div[data-testid="stHorizontalBlock"] { 
         display: flex !important; 
         justify-content: center !important; 
@@ -230,7 +223,7 @@ elif st.session_state.current_view == "quiz":
                                 
                         score = int((correct_count / len(questions)) * 100)
                         
-                        # 🔗 [2] رابط تطبيق الويب الخاص بك
+                        # 🔗 [2] رابط الـ Web App (EXEC) لارسال النتائج تلقائياً للشيت
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                         
                         payload = {

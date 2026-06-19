@@ -89,7 +89,7 @@ courses_db, quizzes_db = load_data()
 st.header("🎓 بوابة الطالب التعليمية")
 if "current_view" not in st.session_state: st.session_state.current_view = "sharh"
 
-# 🛠️ الـ CSS الذكي لتعطيل الجيت هاب والإبقاء على الـ Dark Mode والثلاث نقط
+# 🛠️ الـ CSS الذكي لتعطيل الجيت هاب والإبقاء على الـ Dark Mode والثلاث نقط شغالين
 st.markdown("""
     <style>
     a[href*="github.com"], 
@@ -186,12 +186,13 @@ elif st.session_state.current_view == "quiz":
             if not student_name:
                 st.warning("⚠️ يجب كتابة اسمك أولاً لتتمكن من حل الامتحان ورصد النتيجة.")
             else:
-                if f"start_{chosen_quiz}" not in st.session_state:
-                    st.session_state[f"start_{chosen_quiz}"] = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
+                session_key = f"start_{chosen_quiz}"
+                if session_key not in st.session_state:
+                    st.session_state[session_key] = datetime.now(cairo_tz).strftime("%Y-%m-%d %H:%M:%S")
                     
                 with st.form(key=f"quiz_form_{chosen_quiz}"):
                     st.markdown(f"### 📋 {chosen_quiz}")
-                    st.info(f"👤 الطالب: {student_name} | 🕒 وقت الدخول: {st.session_state[f'start_{chosen_quiz}']}")
+                    st.info(f"👤 الطالب: {student_name} | 🕒 وقت الدخول: {st.session_state[session_key]}")
                     
                     student_answers = {}
                     for i, q in enumerate(questions):
@@ -223,12 +224,12 @@ elif st.session_state.current_view == "quiz":
                                 
                         score = int((correct_count / len(questions)) * 100)
                         
-                        # 🔗 [2] رابط الـ Web App (EXEC) لارسال النتائج تلقائياً للشيت
+                        # 🔗 [2] رابط تطبيق الويب الخاص بك لارسال النتائج تلقائياً للشيت
                         WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxB72pq4-UUV_N9NOUdZgaCqBYj6x3p2RcPXoY1CDPmCgvo_4yFMEdirZ_nK_c_S8fcPw/exec"
                         
                         payload = {
                             "student_name": student_name, "quiz_title": chosen_quiz, "score": score,
-                            "start_time": st.session_state[f'start_{chosen_quiz}'], "submit_time": submit_time
+                            "start_time": st.session_state[session_key], "submit_time": submit_time
                         }
                         try: requests.post(WEB_APP_URL, json=payload)
                         except: pass
